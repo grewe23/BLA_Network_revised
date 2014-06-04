@@ -1,0 +1,3 @@
+Avoid committing large files into the Git repo. The MNIST dataset ("mnist.pkl") can
+be obtained at:
+    http://www.stanford.edu/~kimth/ANN/

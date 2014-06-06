@@ -46,8 +46,9 @@ class layer():
    
     def layer_activation(self,layer_input):   
         z= self.biases + self.bo 
-        zs= z
+        zs=z
         reg_activity,highest_act =[], []
+        num_highest_neurons=0
         
         print('biases ' + str(len(self.biases)))
         print('intra layer weights ' + str(np.shape(self.IntraW)) )         
@@ -57,8 +58,8 @@ class layer():
         for l in xrange(len(layer_input)):    # going through inputs and adding them to z first time                 
             z= z + np.dot(self.InterW[l],layer_input[l]) # z based on pure inputs
         layer_input.append(af.sigmoid_vec(z)) # layer activation based on pure inputs 
-        
-        '''for k in xrange(len(layer_input)-1):      # intra_layer calculations                       
+        ''''
+        for k in xrange(len(layer_input)-1):      # intra_layer calculations                       
                 zs= zs + np.dot(self.InterW[k],layer_input[k]) # z based on pure inputs
         zs= zs + np.dot(self.IntraW,layer_input[len(layer_input)-1]) #adding intra_layer activity as last step
         '''
@@ -66,9 +67,10 @@ class layer():
         reg_activity=af.sigmoid_vec(z)  # final layer activity before regulation
         
         if self.layer_down_reg!=100:
-            highest_act=np.argpartition(-reg_activity.T, (int(len(reg_activity)/(100/self.layer_down_reg)))) #  indicies of the 10 highherst acitivities     
-            for s in xrange(len(highest_act.T)):
-                if s in highest_act.T[:(int(len(reg_activity)/(100/self.layer_down_reg)))]:
+            num_highest_neurons=int(len(reg_activity)/(100/self.layer_down_reg))
+            highest_act=np.argpartition(-reg_activity.T, num_highest_neurons) #  indicies of the 10 highherst acitivities     
+            for s in xrange(len(reg_activity)):
+                if s in highest_act.T[:(num_highest_neurons)]:
                     reg_activity[s]=reg_activity[s]
                 else:
                     reg_activity[s]=0
@@ -160,14 +162,14 @@ class basic_network():
            elif self.layer_IO[x]=='input':
                net_activation.append(input_vector[1])
                
-           else:
+           elif self.layer_IO[x]=='hidden': 
                activate=layer(self.biases[x], self.INTRA_layer_weights[x],self.INTER_layer_weights[x], self.bias_offsets[x], self.layer_act_reg[x])   #init layer class
                for h in self.layer_connect[x]:
                    if h==0:
                        layer_input.append(net_activation[h]*self.instr_strength[x])
                    else:
                        layer_input.append(net_activation[h])
-                
+                       
                layer_activations=activate.layer_activation(layer_input)  # send input to layer and get layer activity
                net_activation.append(layer_activations[0]) # append layer activity to net activity
                
@@ -175,6 +177,10 @@ class basic_network():
                self.biases[x]=layer_activations[1]
                self.INTRA_layer_weights[x]=layer_activations[2]
                self.INTER_layer_weights[x]=layer_activations[3]
+               
+                       
+           else:  # this is for the output layer which is set to the activit of the instructive layer
+               net_activation.append(input_vector[0])
 
            print('Length of layer output:' + str(len(net_activation[x])))
            print('length of net activation vector ' + str(len(net_activation)))

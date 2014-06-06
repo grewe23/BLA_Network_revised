@@ -6,7 +6,7 @@ Activation functions
 '''
 
 def sigmoid(z):
-    return 1.0/(1.0+np.exp(-z))
+    return 1.0/(1.0+np.exp(-z*0.1))
 sigmoid_vec = np.vectorize(sigmoid)
 def sigmoid_prime(z):
     return sigmoid(z)*(1.0-sigmoid(z))

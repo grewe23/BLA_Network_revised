@@ -36,30 +36,31 @@ training_data=mnist_loader.load_training_data_with_label(1)
 # defining network parameters
 net_params = {        'layers':             [(10,'instr'), (784,'input'), (300,'hidden'), (300,'hidden'),(300,'hidden'), (300,'hidden'), (10,'output')],
                       'layer_connect':      [(0,), (0,), (0,1), (0,2), (0,3), (0,4), (0,5)], # forward connections to hidden/output layer 
-                      'layer_act_reg':     [ 100, 100, 30, 20, 15, 10, 10 ],  # [ 100, 100, 30, 20, 10, 10, 10 ],
+                      'layer_act_reg':     [ 100, 100, 30, 20, 15, 10, 20 ],  # [ 100, 100, 30, 20, 10, 10, 10 ],
                       'bias_offset':        [-3 for x in xrange(7) ],
-                      'inst_strenght':      [1, 1, 5, 10, 20, 30, 100]   # [1, 1, 5, 20, 30, 100, 100] 
+                      'inst_strenght':      [1, 1, 1, 5, 10, 20, 20]   # [1, 1, 5, 20, 30, 100, 100] 
                       
  }                    
 neuron_params = {     'af_name':              'sigmoid',
                       'learning_rule_name':   'oja',
-                      'eta':                   [1, 1, 0.1, 0.1, 0.1, 0.1, 0.1]   }
+                      'eta':                   [1, 1, 0.01, 0.01, 0.05, 0.2, 0.3] } #  [0, 0, 0, 0, 0, 0, 0]  for testing    
 
 
 
 net=bn.basic_network(net_params,neuron_params)  # init network parameters
 
-pp=1
+pp=0
 for l in xrange(1):
-    print('rep nr' + str(l))# going through the training data
+    print('TRAINING RUN NR. ' + str(l))# going through the training data
     # get network activation 
-    if l>190:
-        abc=net.network_activation([(np.multiply(training_data[l][1],0)),(training_data[l][0])])
+    if l>90:
+        zero_instr=(np.multiply(training_data[l][1],0))
+        abc=net.network_activation([zero_instr,(training_data[l][0])])
         pp=1
         
     else:         
         abc=net.network_activation([training_data[l][1],(training_data[l][0])])
-     
+    #print('output layer activation   ' + str(abc[len(abc)-1])) 
     
 
 

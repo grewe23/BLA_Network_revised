@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 '''
 Activation functions
@@ -41,21 +40,4 @@ functions = {'sigmoid': (sigmoid_vec, sigmoid_prime_vec),
              'tanh': (tanh_vec, tanh_prime_vec),
             }
 
-# Test functions
-#------------------------------------------------------------
-def compare_sigmoid_tanh():
-    x = np.linspace(-5,5,100)
-    ys = sigmoid_vec(x)
-    yt = tanh_vec(x)
-    plt.plot(x,ys,'b')
-    plt.plot(x,yt,'r')
-    plt.xlim([x[0],x[-1]])
-    
-def show_tanh_derivative():
-    x = np.linspace(-5,5,100)
-    y = tanh_vec(x)
-    yp = tanh_prime_vec(x)
-    plt.plot(x,y,'b')
-    plt.plot(x,yp,'r')
-    plt.xlim([x[0],x[-1]])
 

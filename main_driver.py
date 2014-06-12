@@ -25,8 +25,8 @@ import numpy as np
 
 
 # Load data (see data/README for instructions on downloading MNIST set)
-#training_data, validation_data, test_data =mnist_loader.load_data_wrapper()
-training_data=mnist_loader.load_training_data_with_label(1)
+training_data, validation_data, test_data =mnist_loader.load_data_wrapper()
+#training_data=mnist_loader.load_training_data_with_label(1)
 
 
 
@@ -34,35 +34,35 @@ training_data=mnist_loader.load_training_data_with_label(1)
 #print (len(training_data1))
 #print( len(training_data1[1][0]))
 # defining network parameters
-net_params = {        'layers':             [(10,'instr'), (784,'input'), (300,'hidden'), (300,'hidden'),(300,'hidden'), (300,'hidden'), (10,'output')],
-                      'layer_connect':      [(0,), (0,), (0,1), (0,2), (0,3), (0,4), (0,5)], # forward connections to hidden/output layer 
-                      'layer_act_reg':     [ 100, 100, 30, 20, 15, 10, 20 ],  # [ 100, 100, 30, 20, 10, 10, 10 ],
-                      'bias_offset':        [-3 for x in xrange(7) ],
-                      'inst_strenght':      [1, 1, 1, 5, 10, 20, 20]   # [1, 1, 5, 20, 30, 100, 100] 
+net_params = {        'layers':             [(10,'instr'), (784,'input'), (300,'hidden'), (10,'output')],
+                      'layer_connect':      [(0,), (0,), (0,1), (0,2)], # forward connections to hidden/output layer 
+                      'layer_act_reg':     [ 100, 100, 10, 10 ],  # [ 100, 100, 30, 20, 10, 10, 10 ],
+                      'bias_offset':        [(-5 -1.5*x) for x in xrange(4) ],
+                      'inst_strenght':      [1, 1, 100 , 100]   # [1, 1, 5, 20, 30, 100, 100] 
                       
  }                    
 neuron_params = {     'af_name':              'sigmoid',
                       'learning_rule_name':   'oja',
-                      'eta':                   [1, 1, 0.01, 0.01, 0.05, 0.2, 0.3] } #  [0, 0, 0, 0, 0, 0, 0]  for testing    
+                      'eta':                   [1, 1, 0.01, 0.01 ] } #  [0, 0, 0, 0, 0, 0, 0]  for testing    
 
 
 
 net=bn.basic_network(net_params,neuron_params)  # init network parameters
 
 pp=0
-for l in xrange(1):
+for l in xrange(1000):
     print('TRAINING RUN NR. ' + str(l))# going through the training data
     # get network activation 
-    if l>90:
-        zero_instr=(np.multiply(training_data[l][1],0))
-        abc=net.network_activation([zero_instr,(training_data[l][0])])
+    if l>980 :
+        zero_instr=training_data[l][1] * 0
+        abc=net.network_activation([zero_instr, (training_data[l][0])])
         pp=1
-        
+  
     else:         
-        abc=net.network_activation([training_data[l][1],(training_data[l][0])])
+        abc=net.network_activation([(training_data[l][1]), (training_data[l][0])])
     #print('output layer activation   ' + str(abc[len(abc)-1])) 
     
-
+    #print(np.sum(training_data[l][0])) 
 
 
     if pp==1:
@@ -73,7 +73,7 @@ for l in xrange(1):
         plt.show()
         for x in xrange(len(abc)):
             #plt.subplot(1,len(abc),x+1) 
-            hh=[(10,1), (28,28), (30,10), (30,10), (30,10), (30,10), (10,1)]
+            hh=[(10,1), (28,28), (30,10), (10,1)]
             digits=np.reshape(abc[x],hh[x])
             imgplot=fig.add_subplot(1,len(abc),x+1)
             imgplot=plt.imshow(digits, interpolation="nearest")

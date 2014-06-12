@@ -50,57 +50,41 @@ class layer():
     def layer_activation(self,layer_input):   
         z= np.add(self.layer_biases, self.bo)
         layer_output,  reg_activity,  highest_act =[], [], []
-        num_highest_neurons=0
-        
-        
-        if self.layer_ID == 'hidden' or (self.layer_ID=='output' and sum(layer_input[0])==0) :  # second condition is when we take away the instr signal the layer should compute as hidden      
+                
+        if self.layer_ID == 'hidden' or (self.layer_ID=='output'and sum(layer_input[0])==0) :  # second condition is when we take away the instr signal the layer should compute as hidden      
                 
             for l in xrange(len(layer_input)):              # going through inputs and adding them to z - first run                 
                 z += np.dot(self.InterW[l],layer_input[l])  # z based on pure inputs - first run
                 
-            layer_input.append(af(z))                                                   # layer activation based on pure inputs - first run             
-            reg_activity= af(z + np.dot(self.IntraW,layer_input[len(layer_input)-1]))   #adding intra_layer activity as last step
-            
+            reg_activity= af(z + np.dot(self.IntraW, af(z) )  )   #adding intra_layer activity as last step
+        
             # LAYER DONW-REGULATION STARTS HERE
-            if self.layer_ID!='output':
-                num_highest_neurons=int((len(reg_activity)-1)/(100/self.layer_down_reg))    # layer down regulation to xx % (most active neurons)
-                highest_act=np.argpartition(-reg_activity.T, num_highest_neurons)       # indicies of the  neurons with the highest acitivities     
-                for s in xrange(len(reg_activity)):
-                    if s in highest_act.T[:(num_highest_neurons)]:
-                        reg_activity[s]=reg_activity[s]
-                    else:
-                        reg_activity[s]=0           # setting low active neurons to 0
+            if 1==1:
+                layer_output= reg_activity * (reg_activity is reg_activity>np.percentile(reg_activity, (100-self.layer_down_reg)))
             else:
-                pass
+                layer_output=reg_activity
             
-            layer_output=reg_activity
-        
+                        
+
         else:                               # this is for the output layer only
-                #print('update layer activit')
-                layer_output=(1/np.max(layer_input[0]))  *  layer_input[0]
-                #print(layer_output)# if layer ID is 'output' we clamp the layer activity to the label/ instructive layer
-                layer_input.append(layer_output)
-                #print(len(layer_input))
-        
-            
-        print('layer input ' + str([len(layer_input[y]) for y in xrange(len(layer_input)-1)]))  
-        print('biases-' + str(len(self.layer_biases))+ '   intra layer weights-' + str(np.shape(self.IntraW))+ '   inter layer weights-' + str([np.shape(self.InterW[x]) for x in xrange(len(self.InterW))]))
+                layer_output=(1/np.max(layer_input[0]))   *layer_input[0]
+                
+        layer_input.append(layer_output)  # if layer ID is 'output' we clamp the layer activity to the label/ instructive layer
+           
+               
+        '''print('layer input ' + str([len(layer_input[y]) for y in xrange(len(layer_input)-1)]))  
+        print('biases: ' + str(len(self.layer_biases))+ '   intra layer weights-' + str(np.shape(self.IntraW))+ '   inter layer weights-' + str([np.shape(self.InterW[x]) for x in xrange(len(self.InterW))]))
         print('layer output-' + str(len(layer_output)) + '   MIN/MAX ' + str(np.min(layer_output))  + ' / ' + str(np.max(layer_output)) )
+        '''
         
-        
-        
+        #print('SUM INTRAW:  ' + str(np.sum(self.IntraW[1])))
         # LEARNING STARTS HERE          #          LEARNING STARTS HERE         #          LEARNING STARTS HERE
         
         new_biases=self.layer_biases
         updated_InterW=self.InterW 
         updated_IntraW=self.IntraW
-       
-        if self.layer_ID=='output':
-            print(self.layer_biases)        
-            print(len)
         
-        
-        
+
         #print('INTER MAX/MIN  BEFORE   ' + str(np.amax(updated_InterW[1])) +'   /   ' +str(np.amin(updated_InterW[1])))
         #print('INTRA MAX/MIN  BEFORE   ' + str(np.amax(updated_IntraW)) +'   /   ' +str(np.amin(updated_IntraW))) 
         
@@ -111,9 +95,10 @@ class layer():
             
             if i>0:   # this only learns the input weights form the previous hidden layer, not the weights from the instruction layer i=0
                 
-                delta_InterW = np.sign(np.squeeze(updated_InterW[i])) * (self.learning_rate * \
-                    (( np.multiply.outer(np.squeeze(layer_output**3),  np.squeeze(layer_input[i]))) - np.absolute(np.squeeze(updated_InterW[i])) ))  # hebbian learning ala OJA-ICA 
-            
+                delta_InterW = np.sign(np.squeeze(updated_InterW[i])) * self.learning_rate * \
+                    (( np.multiply.outer(np.squeeze(layer_output**3),  np.squeeze(layer_input[i]))) - np.absolute(np.squeeze(updated_InterW[i])) )  # hebbian learning ala OJA-ICA 
+                
+                
                 updated_InterW[i] += delta_InterW  
                 
                 #print('INTER MAX/MIN  UPDATED   ' + str(np.amax(updated_InterW[i])) +'   /   ' +str(np.amin(updated_InterW[i])))
@@ -122,12 +107,13 @@ class layer():
         
         # update intra layer weights # applied learning rule is : dW= sing(W) * eta * (x*y**3 - abs(w))        
         #--- x is input neuron activity, y is weight adjusting neuron activity 
-        
-        delta_IntraW = np.sign(np.squeeze(updated_IntraW)) * self.learning_rate * \
-                    (( np.multiply.outer( np.squeeze(layer_input[len(layer_input)-1]**3),  np.squeeze(layer_input[len(layer_input)-1])  )  ) - np.absolute(np.squeeze(updated_IntraW)) )  # hebbian learning ala OJA-ICA 
-            
-        updated_IntraW += delta_IntraW         
-        
+        if 1==1:
+            delta_IntraW = np.sign(np.squeeze(updated_IntraW)) * self.learning_rate * \
+                    (( np.multiply.outer( np.squeeze(layer_output**3),  np.squeeze(layer_output)  )  ) - np.absolute(np.squeeze(updated_IntraW)) )  # hebbian learning ala OJA-ICA 
+            print(np.std(delta_IntraW))
+            updated_IntraW += delta_IntraW         
+        else:
+            pass
         #print('INTRA MAX/MIN  UPDATED   ' + str(np.amax(updated_IntraW)) +'   /   ' +str(np.amin(updated_IntraW)))
         
         
@@ -169,7 +155,8 @@ class basic_network():
                 self.biases.append([])            
             
             elif self.layer_ID[x]=='hidden':
-                self.INTRA_layer_weights.append((np.absolute((np.random.randn(self.layers[x],self.layers[x]))))*(-0.05))
+                self.INTRA_layer_weights.append((np.absolute((np.random.randn(self.layers[x],self.layers[x]))))*(-1))
+                #self.INTRA_layer_weights.append(np.zeros((self.layers[x],self.layers[x]),))
                 self.biases.append((np.random.randn(self.layers[x],1)))
                 self.INTER_layer_weights.append([(np.random.randn((self.layers[x]),(self.layers[k]))) for k in self.layer_connect[x]])
                 
@@ -179,7 +166,8 @@ class basic_network():
                 self.biases.append([])
                 
             else: # this is initializing the output layer
-                self.INTRA_layer_weights.append((np.absolute((np.random.randn(self.layers[x],self.layers[x]))))*(-0.05))
+                self.INTRA_layer_weights.append((np.absolute((np.random.randn(self.layers[x],self.layers[x]))))*(-1))
+                #self.INTRA_layer_weights.append(np.zeros((self.layers[x],self.layers[x]),))
                 self.biases.append((np.random.randn(self.layers[x],1)))
                 self.INTER_layer_weights.append([(np.random.randn((self.layers[x]),(self.layers[k]))) for k in self.layer_connect[x]])
            
@@ -204,8 +192,8 @@ class basic_network():
 
             # go through layers, and handle respectively to input/hidden/output
         for x in xrange(len(self.layers)):
-           print ('----------------------------------------------------')
-           print('Compute ' +self.layer_ID[x]  +' layer Nr: ' +str(x) +' - ' +str(self.layers[x]) +' neurons')
+           # print ('----------------------------------------------------')
+           # print('Compute ' +self.layer_ID[x]  +' layer Nr: ' +str(x) +' - ' +str(self.layers[x]) +' neurons')
            layer_input=[]
            
            if self.layer_ID[x]=='instr':             
